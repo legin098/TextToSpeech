@@ -68,6 +68,12 @@ class TextToSpeechService: NSObject, AVSpeechSynthesizerDelegate, TextToSpeechSe
         }
     }
     
+    /// Restores the audio session to its inactive state.
+    ///
+    /// This method attempts to deactivate the `AVAudioSession` and release control of the audio output.
+    /// It ensures that other apps can regain audio priority if the session was blocking them.
+    ///
+    /// - Throws: `TextToSpeechError.audioSessionDeactivationFailed` if the deactivation process fails.
     private func restoreAudioSession() throws {
         let audioSession = AVAudioSession.sharedInstance()
         do {

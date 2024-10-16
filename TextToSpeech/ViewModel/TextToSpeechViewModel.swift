@@ -28,7 +28,7 @@ final class TextToSpeechViewModel: ObservableObject {
         isSpeaking = true
         
         do {
-            try textToSpeechService.speak(text: inputText) {
+            try textToSpeechService.speak(text: inputText, withVoice: "com.apple.ttsbundle.siri_male_en-US_compact") {
                 self.isSpeaking = false
             }
         } catch {
