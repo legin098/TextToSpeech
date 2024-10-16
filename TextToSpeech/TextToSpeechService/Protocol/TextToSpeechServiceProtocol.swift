@@ -9,5 +9,5 @@ import Foundation
 
 protocol TextToSpeechServiceProtocol {
     func speak(text: String, withVoice voiceIdentifier: String?, completion: @escaping () -> Void) throws
-    func stopSpeaking()
+    func stopSpeaking() throws
 }

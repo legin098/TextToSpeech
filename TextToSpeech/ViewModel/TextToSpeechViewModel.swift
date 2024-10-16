@@ -12,6 +12,7 @@ final class TextToSpeechViewModel: ObservableObject {
     
     @Published var isSpeaking: Bool = false
     @Published var inputText: String = ""
+    @Published var errorMessage: String?
     
     init(textToSpeechService: TextToSpeechService) {
         self.textToSpeechService = textToSpeechService
@@ -31,6 +32,7 @@ final class TextToSpeechViewModel: ObservableObject {
                 self.isSpeaking = false
             }
         } catch {
+            errorMessage = error.localizedDescription
             isSpeaking = false
         }
     }
@@ -38,7 +40,12 @@ final class TextToSpeechViewModel: ObservableObject {
     /// Stops the speech if it's in progress.
     @MainActor
     func stopSpeaking() {
-        textToSpeechService.stopSpeaking()
-        isSpeaking = false
+        do {
+            try textToSpeechService.stopSpeaking()
+            isSpeaking = false
+        } catch  {
+            errorMessage = error.localizedDescription
+            isSpeaking = false
+        }
     }
 }

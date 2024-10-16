@@ -10,7 +10,7 @@ import Foundation
 
 class TextToSpeechService: NSObject, AVSpeechSynthesizerDelegate, TextToSpeechServiceProtocol {
     private var synthesizer: AVSpeechSynthesizer
-    private var onFinishSpeaking: (() -> Void)?
+    private var onFinishSpeaking: (() throws -> Void)?
     private var currentUtterance: AVSpeechUtterance?
     
     override init() {
@@ -48,19 +48,32 @@ class TextToSpeechService: NSObject, AVSpeechSynthesizerDelegate, TextToSpeechSe
         if currentUtterance != nil, synthesizer.isSpeaking {
             synthesizer.stopSpeaking(at: .immediate)
         }
-
+        
         self.currentUtterance = utterance
-        onFinishSpeaking = completion
+        onFinishSpeaking = {
+            completion()
+            try self.restoreAudioSession()
+        }
         
         synthesizer.speak(utterance)
     }
     
     /// Stops the current speech if it is in progress.
     @MainActor
-    func stopSpeaking() {
+    func stopSpeaking() throws {
         if synthesizer.isSpeaking, currentUtterance != nil {
             synthesizer.stopSpeaking(at: .immediate)
-            self.currentUtterance = nil
+            currentUtterance = nil
+            try restoreAudioSession()
+        }
+    }
+    
+    private func restoreAudioSession() throws {
+        let audioSession = AVAudioSession.sharedInstance()
+        do {
+            try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
+        } catch {
+            throw TextToSpeechError.audioSessionDeactivationFailed(error.localizedDescription)
         }
     }
     
@@ -70,7 +83,7 @@ class TextToSpeechService: NSObject, AVSpeechSynthesizerDelegate, TextToSpeechSe
     ///   - utterance: The utterance that has finished.
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
         if utterance == currentUtterance {
-            onFinishSpeaking?()
+            try? onFinishSpeaking?()
             self.currentUtterance = nil
         }
     }
